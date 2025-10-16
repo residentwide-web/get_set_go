@@ -139,23 +139,4 @@ if st.button("Calculate Fueling Requirements"):
     st.markdown(suggest_foods(deficit_protein, deficit_carbs, deficit_fat, diet_choice))
 
 # --------- Feedback Form ---------
-st.markdown("---")
-st.subheader("💬 Feedback Form")
-
-with st.form("feedback_form"):
-    q1 = st.radio("1. How useful do you find this fueling calculator?", ["Very useful", "Somewhat useful", "Neutral", "Not useful"])
-    q2 = st.text_area("2. How are you currently tracking your fueling and nutrition needs?")
-    q3 = st.radio("3. How often would you use a tool like this?", ["Daily", "Weekly", "Occasionally", "Rarely"])
-    q4 = st.radio("4. Would you consider paying for a more advanced version?", ["Yes definitely", "Maybe", "Not sure", "No"])
-    q5 = st.text_area("5. What feature would make this most valuable for you?")
-    submitted = st.form_submit_button("Submit Feedback")
-
-    if submitted:
-        st.success("✅ Thank you for your feedback!")
-        st.write({"Q1": q1, "Q2": q2, "Q3": q3, "Q4": q4, "Q5": q5})
-        feedback_data = {"Q1": [q1], "Q2": [q2], "Q3": [q3], "Q4": [q4], "Q5": [q5]}
-        df = pd.DataFrame(feedback_data)
-        if not os.path.exists("feedback.csv"):
-            df.to_csv("feedback.csv", index=False)
-        else:
-            df.to_csv("feedback.csv", mode="a", header=False, index=False)
+# ----------- FEEDBACK FORM SECTION -----------
