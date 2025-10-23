@@ -15,7 +15,7 @@ hide_menu_style = """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
 # TITLE
 # ---------------------------------------------------------
-st.title("🏁 Get Set, Go!!!")
+st.title(":weight_lifting_man: Get Set, Go!!!")
 st.subheader("Performance Driven Personalized Fuelling Requirements and Macro Tracker")
 
 # ---------------------------------------------------------
