@@ -169,17 +169,57 @@ if gender == "Female":
 st.markdown("---")
 st.header("Step 2: Current Macro Intake")
 
-intake_carbs = st.number_input("Carbohydrates consumed (g)", min_value=0, value=0, step=5)
-intake_protein = st.number_input("Protein consumed (g)", min_value=0, value=0, step=5)
-intake_fat = st.number_input("Fat consumed (g)", min_value=0, value=0, step=1)
-
 st.write("OR upload a nutrition label image to extract details:")
-uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-if uploaded_image:
-    image = Image.open(uploaded_image)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
-    extracted_text = extract_macros_from_image(image)
-    st.text_area("Extracted Nutrition Info", extracted_text, height=150)
+st.subheader("Step 2: Current Macro Intake")
+
+uploaded_file = st.file_uploader("Upload a food label image (optional)", type=["jpg", "jpeg", "png"])
+
+# Initialize session state defaults
+if "ocr_carbs" not in st.session_state:
+    st.session_state.ocr_carbs = 0
+if "ocr_protein" not in st.session_state:
+    st.session_state.ocr_protein = 0
+if "ocr_fat" not in st.session_state:
+    st.session_state.ocr_fat = 0
+
+# OCR extraction
+if uploaded_file is not None:
+    try:
+        from PIL import Image
+        import pytesseract
+        import re
+
+        image = Image.open(uploaded_file)
+        text = pytesseract.image_to_string(image)
+
+        # Extract macros using regex (basic pattern)
+        carbs_match = re.search(r"Carbohydrates?\s*[:\-]?\s*(\d+\.?\d*)", text, re.IGNORECASE)
+        protein_match = re.search(r"Protein\s*[:\-]?\s*(\d+\.?\d*)", text, re.IGNORECASE)
+        fat_match = re.search(r"Fat\s*[:\-]?\s*(\d+\.?\d*)", text, re.IGNORECASE)
+
+        if carbs_match:
+            st.session_state.ocr_carbs = float(carbs_match.group(1))
+        if protein_match:
+            st.session_state.ocr_protein = float(protein_match.group(1))
+        if fat_match:
+            st.session_state.ocr_fat = float(fat_match.group(1))
+
+        st.success("✅ Nutrition details extracted successfully!")
+        st.write("Extracted values (you can edit below):")
+        st.write(f"- Carbohydrates: {st.session_state.ocr_carbs} g")
+        st.write(f"- Protein: {st.session_state.ocr_protein} g")
+        st.write(f"- Fat: {st.session_state.ocr_fat} g")
+
+    except Exception as e:
+        st.warning("⚠️ Unable to extract data from image. Please enter manually.")
+        st.error(str(e))
+
+# Auto-fill input fields with OCR values (editable)
+intake_carbs = st.number_input("Carbohydrates consumed (g)", min_value=0.0, value=float(st.session_state.ocr_carbs), step=5.0)
+intake_protein = st.number_input("Protein consumed (g)", min_value=0.0, value=float(st.session_state.ocr_protein), step=5.0)
+intake_fat = st.number_input("Fat consumed (g)", min_value=0.0, value=float(st.session_state.ocr_fat), step=1.0)
+
+
 
 st.markdown("---")
 if st.button("Calculate Fueling Requirements"):
