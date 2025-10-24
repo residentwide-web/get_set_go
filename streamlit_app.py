@@ -167,23 +167,17 @@ if gender == "Female":
         menstrual_phase = st.selectbox("Select your current phase", ["Follicular", "Luteal", "Menstrual", "Ovulatory"])
 
 st.markdown("---")
-st.header("Step 2: Current Macro Intake")
 
-st.write("OR upload a nutrition label image to extract details:")
 st.subheader("Step 2: Current Macro Intake")
 
 uploaded_file = st.file_uploader("Upload a food label image (optional)", type=["jpg", "jpeg", "png"])
 
-# Initialize session state defaults
-if "ocr_carbs" not in st.session_state:
+# Reset session state when a new file is uploaded
+if uploaded_file is not None:
     st.session_state.ocr_carbs = 0
-if "ocr_protein" not in st.session_state:
     st.session_state.ocr_protein = 0
-if "ocr_fat" not in st.session_state:
     st.session_state.ocr_fat = 0
 
-# OCR extraction
-if uploaded_file is not None:
     try:
         from PIL import Image
         import pytesseract
@@ -191,33 +185,44 @@ if uploaded_file is not None:
 
         image = Image.open(uploaded_file)
         text = pytesseract.image_to_string(image)
+        clean_text = text.replace("\n", " ").replace(":", " ").replace("-", " ")
+        clean_text = re.sub(r"\s+", " ", clean_text).lower()
 
-        # Extract macros using regex (basic pattern)
-        carbs_match = re.search(r"Carbohydrates?\s*[:\-]?\s*(\d+\.?\d*)", text, re.IGNORECASE)
-        protein_match = re.search(r"Protein\s*[:\-]?\s*(\d+\.?\d*)", text, re.IGNORECASE)
-        fat_match = re.search(r"Fat\s*[:\-]?\s*(\d+\.?\d*)", text, re.IGNORECASE)
+        
+        # Broader regex for Indian-style labels
+        carb_match = re.search(r"(carb|cho|carbohydrates?)\D*?(\d+\.?\d*)", clean_text)
+        protein_match = re.search(r"(protein)\D*?(\d+\.?\d*)", clean_text)
+        fat_match = re.search(r"(fat|total fat)\D*?(\d+\.?\d*)", clean_text)
 
-        if carbs_match:
-            st.session_state.ocr_carbs = float(carbs_match.group(1))
+        extracted = False
+        if carb_match:
+            st.session_state.ocr_carbs = float(carb_match.group(2))
+            extracted = True
         if protein_match:
-            st.session_state.ocr_protein = float(protein_match.group(1))
+            st.session_state.ocr_protein = float(protein_match.group(2))
+            extracted = True
         if fat_match:
-            st.session_state.ocr_fat = float(fat_match.group(1))
+            st.session_state.ocr_fat = float(fat_match.group(2))
+            extracted = True
 
-        st.success("✅ Nutrition details extracted successfully!")
-        st.write("Extracted values (you can edit below):")
-        st.write(f"- Carbohydrates: {st.session_state.ocr_carbs} g")
-        st.write(f"- Protein: {st.session_state.ocr_protein} g")
-        st.write(f"- Fat: {st.session_state.ocr_fat} g")
+        if extracted:
+            st.success("✅ Nutrition details extracted successfully!")
+            st.write("Extracted values (you can edit below):")
+            st.write(f"- Carbohydrates: {st.session_state.ocr_carbs} g")
+            st.write(f"- Protein: {st.session_state.ocr_protein} g")
+            st.write(f"- Fat: {st.session_state.ocr_fat} g")
+        else:
+            st.warning("⚠️ No clear nutrition info detected. Please check the label text or enter manually.")
+            st.info("Tip: Make sure the label includes words like ‘carb’, ‘protein’, or ‘fat’.")
 
     except Exception as e:
-        st.warning("⚠️ Unable to extract data from image. Please enter manually.")
-        st.error(str(e))
+        st.error(f"❌ Error reading image: {e}")
 
-# Auto-fill input fields with OCR values (editable)
-intake_carbs = st.number_input("Carbohydrates consumed (g)", min_value=0.0, value=float(st.session_state.ocr_carbs), step=5.0)
-intake_protein = st.number_input("Protein consumed (g)", min_value=0.0, value=float(st.session_state.ocr_protein), step=5.0)
-intake_fat = st.number_input("Fat consumed (g)", min_value=0.0, value=float(st.session_state.ocr_fat), step=1.0)
+# Auto-fill with extracted values (editable)
+intake_carbs = st.number_input("Carbohydrates consumed (g)", min_value=0.0, value=st.session_state.get("ocr_carbs", 0.0), step=5.0)
+intake_protein = st.number_input("Protein consumed (g)", min_value=0.0, value=st.session_state.get("ocr_protein", 0.0), step=5.0)
+intake_fat = st.number_input("Fat consumed (g)", min_value=0.0, value=st.session_state.get("ocr_fat", 0.0), step=1.0)
+
 
 
 
