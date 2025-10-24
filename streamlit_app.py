@@ -62,6 +62,34 @@ def fueling_requirements(intensity: str, weight_kg: float, duration_hr: float, g
     fat_min_g = weight_kg * 0.8
     fat_max_g = weight_kg * 1.0
 
+     # Menstrual Cycle Adjustment
+    # ----------------------------
+    if gender == "Female" and menstrual_phase:
+        if menstrual_phase == "Luteal":
+            # Higher metabolic demand and protein turnover
+            carbs_min *= 1.1
+            carbs_max *= 1.1
+            protein_min_g *= 1.1
+            protein_max_g *= 1.1
+            fat_min_g *= 1.1
+            fat_max_g *= 1.1
+        elif menstrual_phase == "Follicular":
+            # More efficient carbohydrate use
+            carbs_min *= 1.0
+            carbs_max *= 1.0
+            protein_min_g *= 1.0
+            protein_max_g *= 1.0
+            fat_min_g *= 1.0
+            fat_max_g *= 1.0
+        elif menstrual_phase == "Menstrual":
+            # Focus on maintaining intake to avoid fatigue
+            carbs_min *= 1.02
+            carbs_max *= 1.02
+            protein_min_g *= 1.05
+            protein_max_g *= 1.05
+            fat_min_g *= 1.05
+            fat_max_g *= 1.05
+
     # Fluids & sodium
     fluid_loss_ml = 600 * duration_hr
     fluid_replacement_ml = fluid_loss_ml * 1.5
@@ -163,7 +191,7 @@ menstrual_phase = None
 if gender == "Female":
     include_cycle = st.radio("Would you like to include menstrual cycle data?", ["No", "Yes"])
     if include_cycle == "Yes":
-        st.info("This helps personalize fueling based on your cycle phase. (Informational only — consult professionals for specifics.)")
+        st.info("Disclaimer: Cycle-based recommendations are general guidelines and may vary individually. Consult professionals for specifics.")
         menstrual_phase = st.selectbox("Select your current phase", ["Follicular", "Luteal", "Menstrual", "Ovulatory"])
 
 st.markdown("---")
